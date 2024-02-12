@@ -47,9 +47,10 @@ private:
     unsigned long n_free_frames;
     unsigned long info_frame_no;
     unsigned char * bitmap;
-    
+
+    // static member, will be shared by all frame pool objects
     static ContFramePool * head;
-    static ContFramePool * list;
+    static ContFramePool * last;
     ContFramePool * next;
     
     /* ---- STATE MANAGEMENT */
