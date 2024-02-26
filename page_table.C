@@ -16,32 +16,108 @@ void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
                             ContFramePool * _process_mem_pool,
                             const unsigned long _shared_size)
 {
-   assert(false);
+   kernel_mem_pool = _kernel_mem_pool;
+   process_mem_pool = _process_mem_pool;
+   shared_size = _shared_size;
+   
    Console::puts("Initialized Paging System\n");
 }
 
+
 PageTable::PageTable()
-{
-   assert(false);
+{   
+   // get frames for page_directory from kernel_mem_pool
+   page_directory = (unsigned long *)(kernel_mem_pool->get_frames(1) * PAGE_SIZE);
+   // get frames for page_table from kernel_mem_pool
+   unsigned long *page_table = (unsigned long *)(kernel_mem_pool->get_frames(1) * PAGE_SIZE);
+
+   // initializing page directory entries
+   // mark first pde as valid
+   // setting supervisor level, read/write and present bits
+   page_directory[0] = (unsigned long)page_table | 0b11;
+
+   // compute the number of shared frames
+   unsigned long no_shared_frames = PageTable::shared_size / PAGE_SIZE;
+
+   // mark the rest of the pde as invalid
+   // i.e. do not set present field
+   for(unsigned int i=1; i<no_shared_frames; ++i)
+      page_directory[i] |= 0b10;
+
+   // map initial 4MB for page table
+   // mark as valid
+   for(unsigned int i=0; i<no_shared_frames; ++i)
+      page_table[i] = PAGE_SIZE * i | 0b11;
+
+   // initially, disable paging
+   paging_enabled = 0;
+
    Console::puts("Constructed Page Table object\n");
 }
 
 
 void PageTable::load()
 {
-   assert(false);
+   // assert(false);
+
+   current_page_table = this;
+   // store the address of page directory in register CR3
+   write_cr3((unsigned long)(current_page_table->page_directory));
+
    Console::puts("Loaded page table\n");
 }
 
+
 void PageTable::enable_paging()
 {
-   assert(false);
+   // assert(false);
+
+   // set the 32nd-bit (paging bit)
+   write_cr0(read_cr0() | 0x80000000);
+   // enabling paging
+   paging_enabled = 1;
+
    Console::puts("Enabled paging\n");
 }
 
+
 void PageTable::handle_fault(REGS * _r)
 {
-  assert(false);
-  Console::puts("handled page fault\n");
+   // assert(false);
+
+   // check if it is page not present exception
+	if ((_r->err_code & 1) == 0) {
+      // get page-fault address
+      unsigned long address = read_cr2();
+
+      // get address of page directory
+      unsigned long *_page_directory = (unsigned long *)read_cr3();
+      // compute index of page directory (initial 10-bits)
+      unsigned long page_directory_idx = (address >> 22);
+
+      unsigned long *_page_table = nullptr;
+
+		if ((_page_directory[page_directory_idx] & 1) == 0) { // the page-fault is at page directory level
+         // get frame for page directory from kernel_mem_pool
+			_page_directory[page_directory_idx] = (unsigned long)(kernel_mem_pool->get_frames(1) * PAGE_SIZE | 0b11);
+         // unset the last 12-bits (offset)
+			_page_table = (unsigned long *)(_page_directory[page_directory_idx] & 0xFFFFF000);
+
+         // mark page table entry as invalid and set user level bit
+			for(unsigned int i=0; i < 1024; ++i)
+				_page_table[i] = 0b100;
+
+		} else { // the page-fault is at page level
+         // compute index of page table (next 10-bits)
+         unsigned long page_table_idx = ( (address >> 12) & 0x3FF );
+         // unset the last 12-bits (offset)
+			_page_table = (unsigned long *)(_page_directory[page_directory_idx] & 0xFFFFF000);
+         // get frame for page table from process_mem_pool
+         // set supervisor level, read/write and present bits
+			_page_table[page_table_idx] = process_mem_pool->get_frames(1) * PAGE_SIZE | 0b11;
+		}
+	}
+
+	Console::puts("handled page fault\n");
 }
 

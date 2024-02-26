@@ -43,7 +43,19 @@ class ContFramePool {
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
     
+    /* ---- Bag of created frame pools */
     
+    static ContFramePool * head;
+    static ContFramePool * tail;    
+ 
+    ContFramePool * next;
+    ContFramePool * prev;
+   
+    /* ---- Info about this frame pool */
+    unsigned char * bitmap;        // We implement the simple frame pool with a bitmap
+    unsigned long   base_frame_no; // Where does the frame pool start in phys mem?
+    unsigned long   nframes;       // Size of the frame pool
+    unsigned long   info_frame_no; // First of the frames with meta data about pool.
     
     /* ---- STATE MANAGEMENT */
     
@@ -52,6 +64,8 @@ private:
     FrameState get_state(unsigned long _frame_no);
     void set_state(unsigned long _frame_no, FrameState _state);
     
+    static void add_to_bag(ContFramePool * _new_pool);
+    static void remove_from_bag(ContFramePool * _pool);
     
 public:
 
@@ -104,6 +118,11 @@ public:
      This function must first identify the correct frame pool and then call the frame
      pool's release_frame function.
      */
+    
+    void pool_release_frames(unsigned long _first_frame_no);
+    
+    bool contains(unsigned long _frame_no);
+    
     
     static unsigned long needed_info_frames(unsigned long _n_frames);
     /*
