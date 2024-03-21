@@ -42,12 +42,20 @@ class ContFramePool {
     
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
-    
-    
+    unsigned long base_frame_no;
+    unsigned long n_frames;
+    unsigned long n_free_frames;
+    unsigned long info_frame_no;
+    unsigned char * bitmap;
+
+    // static member, will be shared by all frame pool objects
+    static ContFramePool * head;
+    static ContFramePool * last;
+    ContFramePool * next;
     
     /* ---- STATE MANAGEMENT */
     
-    enum class FrameState {Free, Used, HoS};
+    enum class FrameState {Free, Used, HoS, Inaccessible};
 
     FrameState get_state(unsigned long _frame_no);
     void set_state(unsigned long _frame_no, FrameState _state);

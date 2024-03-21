@@ -219,7 +219,7 @@ int main() {
 
     /* BY DEFAULT WE TEST THE PAGE TABLE IN MAPPED MEMORY!
        (COMMENT OUT THE FOLLOWING LINE TO TEST THE VM Pools! */
-#define _TEST_PAGE_TABLE_
+// #define _TEST_PAGE_TABLE_
 
 #ifdef _TEST_PAGE_TABLE_
 
@@ -236,7 +236,8 @@ int main() {
     VMPool code_pool(512 MB, 256 MB, &process_mem_pool, &pt1);
 
     /* ---- We define a 256MB heap that starts at 1GB in virtual memory. -- */
-    VMPool heap_pool(1 GB, 256 MB, &process_mem_pool, &pt1);
+    VMPool heap_pool_1(1 GB, 256 MB, &process_mem_pool, &pt1);
+    VMPool heap_pool_2(1 GB, 256 MB, &process_mem_pool, &pt1);
     
     /* -- NOW THE POOLS HAVE BEEN CREATED. */
 
@@ -250,7 +251,8 @@ int main() {
     Console::puts("Testing the memory allocation on code_pool...\n");
     GenerateVMPoolMemoryReferences(&code_pool, 50, 100);
     Console::puts("Testing the memory allocation on heap_pool...\n");
-    GenerateVMPoolMemoryReferences(&heap_pool, 50, 100);
+    GenerateVMPoolMemoryReferences(&heap_pool_1, 50, 100);
+    GenerateVMPoolMemoryReferences(&heap_pool_2, 50, 100);
 
 #endif
 
