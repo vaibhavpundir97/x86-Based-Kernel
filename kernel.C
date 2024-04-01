@@ -23,17 +23,23 @@
 
 /* -- COMMENT/UNCOMMENT THE FOLLOWING LINE TO EXCLUDE/INCLUDE SCHEDULER CODE */
 
-//#define _USES_SCHEDULER_
+#define _USES_SCHEDULER_
 /* This macro is defined when we want to force the code below to use
    a scheduler.
    Otherwise, no scheduler is used, and the threads pass control to each
    other in a co-routine fashion.
 */
 
+#define _RR_SCHEDULER_
+/* This macro is defined when we want to force the code below to use the
+   round-robin scheduler. It is used with macro _USES_SCHEDULER_
+   If macro _USES_SCHEDULER_ is not defined with macro _RR_SCHEDULER_,
+   no scheduler will be used.
+*/
 
 /* -- UNCOMMENT THE FOLLOWING LINE TO MAKE THREADS TERMINATING */
 
-//#define _TERMINATING_FUNCTIONS_
+#define _TERMINATING_FUNCTIONS_
 /* This macro is defined when we want the thread functions to return, and so
    terminate their thread.
    Otherwise, the thread functions don't return, and the threads run forever.
@@ -101,10 +107,12 @@ void operator delete[] (void * p) {
 /*--------------------------------------------------------------------------*/
 
 #ifdef _USES_SCHEDULER_
-
-/* -- A POINTER TO THE SYSTEM SCHEDULER */
-Scheduler * SYSTEM_SCHEDULER;
-
+    /* -- A POINTER TO THE SYSTEM SCHEDULER */
+    #ifdef _RR_SCHEDULER_
+    RRScheduler * SYSTEM_SCHEDULER;
+    #else
+    Scheduler * SYSTEM_SCHEDULER;
+    #endif
 #endif
 
 void pass_on_CPU(Thread * _to_thread) {
@@ -152,7 +160,9 @@ void fun1() {
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 1: TICK ["); Console::puti(i); Console::puts("]\n");
         }
+#ifndef _RR_SCHEDULER_
         pass_on_CPU(thread2);
+#endif
     }
 }
 
@@ -171,7 +181,9 @@ void fun2() {
         for (int i = 0; i < 10; i++) {
             Console::puts("FUN 2: TICK ["); Console::puti(i); Console::puts("]\n");
         }
-        pass_on_CPU(thread3);
+#ifndef _RR_SCHEDULER_
+		pass_on_CPU(thread3);
+#endif
     }
 }
 
@@ -184,7 +196,9 @@ void fun3() {
         for (int i = 0; i < 10; i++) {
 	    Console::puts("FUN 3: TICK ["); Console::puti(i); Console::puts("]\n");
         }
+#ifndef _RR_SCHEDULER_
         pass_on_CPU(thread4);
+#endif
     }
 }
 
@@ -197,7 +211,9 @@ void fun4() {
         for (int i = 0; i < 10; i++) {
 	    Console::puts("FUN 4: TICK ["); Console::puti(i); Console::puts("]\n");
         }
+#ifndef _RR_SCHEDULER_
         pass_on_CPU(thread1);
+#endif
     }
 }
 
@@ -251,15 +267,21 @@ int main() {
                  we enable interrupts correctly. If we forget to do it,
                  the timer "dies". */
 
+#ifndef _RR_SCHEDULER_
     SimpleTimer timer(100); /* timer ticks every 10ms. */
     InterruptHandler::register_handler(0, &timer);
-    /* The Timer is implemented as an interrupt handler. */
+	/* The Timer is implemented as an interrupt handler. */
+#endif
+
+/* -- SCHEDULER -- IF YOU HAVE ONE -- */
 
 #ifdef _USES_SCHEDULER_
 
-    /* -- SCHEDULER -- IF YOU HAVE ONE -- */
- 
-    SYSTEM_SCHEDULER = new Scheduler();
+	#ifdef  _RR_SCHEDULER_
+		SYSTEM_SCHEDULER = new RRScheduler(5);
+	#else
+		SYSTEM_SCHEDULER = new Scheduler();
+	#endif
 
 #endif
 
