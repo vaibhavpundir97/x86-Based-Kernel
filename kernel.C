@@ -19,7 +19,7 @@
 
 /* -- COMMENT/UNCOMMENT THE FOLLOWING LINE TO EXCLUDE/INCLUDE SCHEDULER CODE */
 
-//#define _USES_SCHEDULER_
+#define _USES_SCHEDULER_
 /* This macro is defined when we want to force the code below to use 
    a scheduler.
    Otherwise, no scheduler is used, and the threads pass control to each 
@@ -53,7 +53,7 @@
 #endif
 
 #include "simple_disk.H"    /* DISK DEVICE */
-                            /* YOU MAY NEED TO INCLUDE blocking_disk.H
+#include "blocking_disk.H"  /* YOU MAY NEED TO INCLUDE blocking_disk.H
 /*--------------------------------------------------------------------------*/
 /* MEMORY MANAGEMENT */
 /*--------------------------------------------------------------------------*/
@@ -104,7 +104,8 @@ Scheduler * SYSTEM_SCHEDULER;
 /*--------------------------------------------------------------------------*/
 
 /* -- A POINTER TO THE SYSTEM DISK */
-SimpleDisk * SYSTEM_DISK;
+// SimpleDisk * SYSTEM_DISK;
+BlockingDisk * SYSTEM_DISK;
 
 #define SYSTEM_DISK_SIZE (10 MB)
 
@@ -290,7 +291,8 @@ int main() {
 
     /* -- DISK DEVICE -- */
 
-    SYSTEM_DISK = new SimpleDisk(DISK_ID::MASTER, SYSTEM_DISK_SIZE);
+    // SYSTEM_DISK = new SimpleDisk(DISK_ID::MASTER, SYSTEM_DISK_SIZE);
+    SYSTEM_DISK = new BlockingDisk(DISK_ID::MASTER, SYSTEM_DISK_SIZE);
    
     /* NOTE: The timer chip starts periodically firing as 
              soon as we enable interrupts.
@@ -313,8 +315,8 @@ int main() {
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 2...");
-    char * stack2 = new char[1024];
-    thread2 = new Thread(fun2, stack2, 1024);
+    char * stack2 = new char[1024 << 2];
+    thread2 = new Thread(fun2, stack2, 1024 << 2);
     Console::puts("DONE\n");
 
     Console::puts("CREATING THREAD 3...");

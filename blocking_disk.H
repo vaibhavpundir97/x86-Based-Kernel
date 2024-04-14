@@ -22,6 +22,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include "simple_disk.H"
+#include "queue.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
@@ -34,6 +35,9 @@
 /*--------------------------------------------------------------------------*/
 
 class BlockingDisk : public SimpleDisk {
+
+   Queue blocking_q;
+
 public:
    BlockingDisk(DISK_ID _disk_id, unsigned int _size); 
    /* Creates a BlockingDisk device with the given size connected to the 
@@ -41,6 +45,17 @@ public:
       NOTE: We are passing the _size argument out of laziness. 
       In a real system, we would infer this information from the 
       disk controller. */
+
+   Thread * top();
+   /* This method returns the top thread from the blocking_q.
+      peek() the queue & then dequeue. */
+
+   void wait_until_ready();
+   /* Add the thread to the blocking_q and give up CPU to the next thread. */
+
+   bool has_blocking_thread();
+   /* Returns true if the disk is ready for data transfer and blocking_q
+      is not empty, false otherwise.*/
 
    /* DISK OPERATIONS */
 
