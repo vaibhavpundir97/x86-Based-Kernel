@@ -47,6 +47,8 @@ private:
 
   /* You will need additional information in the inode, such as allocation 
      information. */
+  unsigned long blk_no;   // keeps track of block no where file is stored
+  unsigned long size;     // file size
 
   FileSystem *fs; // It may be handy to have a pointer to the File system.
                   // For example when you need a new block or when you want
@@ -55,6 +57,8 @@ private:
 
   /* You may need a few additional functions to help read and store the 
      inodes from and to disk. */
+  void ReadInodeFromDisk(); // Read inode block from disk.
+  void WriteInodeToDisk();  // Write inode block to disk.
 };
 
 /*--------------------------------------------------------------------------*/
@@ -91,8 +95,8 @@ private:
      If you reserve one block to store the "free list", you can handle a file system up to 
      256kB. (Large enough as a proof of concept.) */
      
-  // short GetFreeInode();
-  // int GetFreeBlock();
+  short GetFreeInode();
+  int GetFreeBlock();
   /* It may be helpful to two functions to hand out free inodes in the inode list and free
      blocks. These functions also come useful to class Inode and File. */
 
@@ -120,5 +124,11 @@ public:
 
   bool DeleteFile(int _file_id);
   /* Delete file with given id in the file system; free any disk block occupied by the file. */
+
+  void ReadBlock(unsigned long _blk_no, unsigned char *_buffer);
+  /* Read _blk_bo from disk and load into _buffer. */
+
+  void WriteBlock(unsigned long _blk_no, unsigned char *_buffer);
+  /* write _buffer to _blk_no of the disk. */
 };
 #endif
